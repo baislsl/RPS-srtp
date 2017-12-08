@@ -8,9 +8,55 @@
 <div>
     <h2>ID: {{ id }}</h2>
 </div>
-实验界面
-<p>
 
-</p>
+实验界面
+<div class="history">
+    历史对战记录
+    {% if history_list %}
+        <table border="1">
+            <tr>
+                <th>轮数</th>
+                <th>你的策略</th>
+                <th>对手的策略</th>
+                <th>胜负情况</th>
+                <th>得分</th>
+            </tr>
+            {% for history in history %}
+                <tr>
+                    <th>{{ history.time }}</th>
+                    <th>{{ history.action1 }}</th>
+                    <th>{{ history.action2 }}</th>
+                    <th>{{ history.win }}</th>
+                    <th>{{ history.points }}</th>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No history are available.</p>
+    {% endif %}
+</div>
+
+<div id="next">
+    <form method="post" action="/handon/">
+        {% csrf_token %}
+        <label>策略:</label>
+        <ul>
+            <li>
+                <label>R: 石头</label>
+                <input type="radio" value="0" id="rock" name="action"/>
+            </li>
+            <li>
+                <label>P: 布</label>
+                <input type="radio" value="1" id="Paper" name="action"/>
+            </li>
+            <li><label>S: 剪刀 </label>
+                <input type="radio" value="2" id="Scissors" name="action"/>
+            </li>
+        </ul>
+        <input type="hidden" id="id" name="id" value="{{ id }}">
+        <input type="submit" value="Submit">
+    </form>
+</div>
+
 </body>
 </html>

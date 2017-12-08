@@ -20,5 +20,6 @@ from . import view
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^$', view.index),
-    url(r'^play/$', view.play)
+    url(r'^play/$', view.play),
+    url(r'^handon/$', view.handon)
 ]
