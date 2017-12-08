@@ -18,16 +18,16 @@
                 <th>轮数</th>
                 <th>你的策略</th>
                 <th>对手的策略</th>
-                <th>胜负情况</th>
-                <th>得分</th>
+                {#                <th>胜负情况</th>#}
+                {#                <th>得分</th>#}
             </tr>
-            {% for history in history %}
+            {% for history in history_list %}
                 <tr>
-                    <th>{{ history.time }}</th>
-                    <th>{{ history.action1 }}</th>
-                    <th>{{ history.action2 }}</th>
-                    <th>{{ history.win }}</th>
-                    <th>{{ history.points }}</th>
+                    <th>{{ history.count }}</th>
+                    <th>{{ history.user_action }}</th>
+                    <th>{{ history.competitor_action }}</th>
+                    {#                    <th>{{ history.win }}</th>#}
+                    {#                    <th>{{ history.points }}</th>#}
                 </tr>
             {% endfor %}
         </table>
@@ -37,7 +37,7 @@
 </div>
 
 <div id="next">
-    <form method="post" action="/handon/">
+    <form method="post" action="/handon/" id="submit">
         {% csrf_token %}
         <label>策略:</label>
         <ul>
@@ -47,16 +47,31 @@
             </li>
             <li>
                 <label>P: 布</label>
-                <input type="radio" value="1" id="Paper" name="action"/>
+                <input type="radio" value="1" id="paper" name="action"/>
             </li>
             <li><label>S: 剪刀 </label>
-                <input type="radio" value="2" id="Scissors" name="action"/>
+                <input type="radio" value="2" id="scissors" name="action"/>
             </li>
         </ul>
         <input type="hidden" id="id" name="id" value="{{ id }}">
-        <input type="submit" value="Submit">
     </form>
+    <button id="submit_button">提交</button>
+
 </div>
 
 </body>
+
+<script language="JavaScript">
+    document.getElementById("submit_button").onclick = function () {
+        var r = document.getElementById("rock").checked;
+        var p = document.getElementById("paper").checked;
+        var s = document.getElementById("scissors").checked;
+        if (!(r || p || s)) {
+            alert("请输入你的决策");
+        } else {
+            document.getElementById("submit").submit();
+        }
+    }
+</script>
+
 </html>
