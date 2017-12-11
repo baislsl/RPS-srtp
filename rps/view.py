@@ -4,6 +4,8 @@ from .control.game import Game
 from django.shortcuts import render
 from .models import Record
 from django.utils import timezone
+from django.http import JsonResponse
+
 import time
 
 games = {}
@@ -27,7 +29,13 @@ def play(request):
 
 def handon(request):
     id = request.POST['id']
+    data = {"info": "handon return"}
+
     action = request.POST.getlist('action')
+    if request.method == 'POST':
+        if request.is_ajax():
+            data = {"info": "handon return"}
+    return JsonResponse(data)
 
     record = Record()
     record.user_id = str(id)

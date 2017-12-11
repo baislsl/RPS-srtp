@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>实验中</title>
-{#    TODO: use local <jquery></jquery>#}
+    {#    TODO: use local <jquery></jquery>#}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
-{#    {% load static %}#}
-{#    <script src="{% static 'rps/jquery.min.js' %}"></script>#}
+    {#    {% load static %}#}
+    {#    <script src="{% static 'rps/jquery.min.js' %}"></script>#}
 </head>
 <body>
 <div>
@@ -65,37 +65,65 @@
 
 </body>
 
+{% csrf_token %}
 <script language="JavaScript">
-    document.getElementById('submit_button').onclick = function (ev) {
-        $(document).ready(function () {
-            var r = document.getElementById("rock").checked;
-            var p = document.getElementById("paper").checked;
-            var s = document.getElementById("scissors").checked;
-            alert("click");
-            if (!(r || p || s)) {
-                alert("请输入你的决策");
-            } else {
-                // document.getElementById("submit").submit();
-                // send ajax
-                $.ajax({
-                    type: 'post',
-                    url: '/play/',
-                    data: {
-                        id: {{ id }},
-                        action_r: r,
-                        action_p: p,
-                        action_s: s
-                    },
-                    success: function (json) {
-                        alert("return success" + json['info'])
+    document.getElementById('submit_button').onclick = function () {
+
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
                     }
-                })
-
-
+                }
             }
-            ;
+            return cookieValue;
+        }
 
+        var csrftoken = getCookie('csrftoken');
+
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
         });
+
+        var r = document.getElementById("rock").checked;
+        var p = document.getElementById("paper").checked;
+        var s = document.getElementById("scissors").checked;
+        alert("click");
+        if (!(r || p || s)) {
+            alert("请输入你的决策");
+        } else {
+            // document.getElementById("submit").submit();
+            // send ajax
+            $.ajax({
+                type: 'post',
+                url: '/play/',
+                data: {
+                    id: {{ id }},
+                    action_r: r,
+                    action_p: p,
+                    action_s: s
+                },
+                success: function (json) {
+                    alert("return success " + json['info'])
+                }
+            });
+        }
+
     }
 
 </script>
