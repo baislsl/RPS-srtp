@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>实验中</title>
+{#    TODO: use local <jquery></jquery>#}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+{#    {% load static %}#}
+{#    <script src="{% static 'rps/jquery.min.js' %}"></script>#}
 </head>
 <body>
 <div>
@@ -62,16 +66,38 @@
 </body>
 
 <script language="JavaScript">
-    document.getElementById("submit_button").onclick = function () {
-        var r = document.getElementById("rock").checked;
-        var p = document.getElementById("paper").checked;
-        var s = document.getElementById("scissors").checked;
-        if (!(r || p || s)) {
-            alert("请输入你的决策");
-        } else {
-            document.getElementById("submit").submit();
-        }
+    document.getElementById('submit_button').onclick = function (ev) {
+        $(document).ready(function () {
+            var r = document.getElementById("rock").checked;
+            var p = document.getElementById("paper").checked;
+            var s = document.getElementById("scissors").checked;
+            alert("click");
+            if (!(r || p || s)) {
+                alert("请输入你的决策");
+            } else {
+                // document.getElementById("submit").submit();
+                // send ajax
+                $.ajax({
+                    type: 'post',
+                    url: '/play/',
+                    data: {
+                        id: {{ id }},
+                        action_r: r,
+                        action_p: p,
+                        action_s: s
+                    },
+                    success: function (json) {
+                        alert("return success" + json['info'])
+                    }
+                })
+
+
+            }
+            ;
+
+        });
     }
+
 </script>
 
 </html>
