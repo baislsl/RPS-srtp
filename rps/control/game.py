@@ -2,11 +2,69 @@ from ..models import Record
 import threading
 import time
 from django.utils import timezone
+import random
+
+R = 0
+P = 1
+S = 2
+
+
+class VirtualPlayer:
+    def __init__(self, id, game):
+        self.id = id
+        self.game = game
+
+    def loop(self):
+        # TODO: remove such naive code
+        while True:
+            self.game.insert(self.id, self.next_action())
+            self.game.wait_last_result()
+            time.sleep(4)
+
+    def start(self):
+        threading.Thread(target=self.loop, name="loop" + self.id).start()
+
+    def next_action(self):
+        """
+        在这里接入模型，需要数据可以调用game的借口
+        :return:
+        """
+        return random.randint(0, 2)
 
 
 class GameManager:
-    def __init__(self, id):
+    game_pool = []
+    game_pool_lock = threading.Lock()
+
+    def __init__(self):
         pass
+
+    def of(self, id):
+        result = None
+        self.game_pool_lock.require()
+        for game in self.game_pool:
+            if game.id1 == id or game.id2 == id:
+                result = game
+        self.game_pool_lock.release()
+        if result is None:
+            result = self.create_game(id)
+            self.game_pool.append(result)
+        return result
+
+    def create_game(self, id):
+        """
+        暂时随机生成对手
+        TODO: 实际中如果人人队长需要阻塞等待另一名对手的产生
+        :param id:
+        :return:
+        """
+        id2 = "VirtualPlayer-" + id
+        self.game_pool_lock.require()
+        game = Game(id, id2)
+        self.game_pool_lock.release()
+        player = VirtualPlayer(id2, game)
+        player.start()
+        return game
 
 
 class Game:

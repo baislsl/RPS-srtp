@@ -2,9 +2,11 @@ from django.db import models
 
 
 class Record(models.Model):
-    user_id = models.CharField(max_length=200)
-    competitor_id = models.CharField(max_length=200)
-    user_action = models.IntegerField()
-    competitor_action = models.IntegerField()
+    id1 = models.CharField(max_length=200)
+    id2 = models.CharField(max_length=200)
+    action1 = models.IntegerField()
+    action2 = models.IntegerField()
+    competition_id = models.CharField(max_length=400)
+
     count = models.IntegerField()
     date = models.DateTimeField()
