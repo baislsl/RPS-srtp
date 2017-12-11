@@ -16,28 +16,9 @@
 实验界面
 <div class="history">
     历史对战记录
-    {% if history_list %}
-        <table border="1">
-            <tr>
-                <th>轮数</th>
-                <th>你的策略</th>
-                <th>对手的策略</th>
-                {#                <th>胜负情况</th>#}
-                {#                <th>得分</th>#}
-            </tr>
-            {% for history in history_list %}
-                <tr>
-                    <th>{{ history.count }}</th>
-                    <th>{{ history.user_action }}</th>
-                    <th>{{ history.competitor_action }}</th>
-                    {#                    <th>{{ history.win }}</th>#}
-                    {#                    <th>{{ history.points }}</th>#}
-                </tr>
-            {% endfor %}
-        </table>
-    {% else %}
-        <p>No history are available.</p>
-    {% endif %}
+    <table border="1" id="history_table">
+    </table>
+
 </div>
 
 <div id="next">
@@ -60,6 +41,7 @@
         <input type="hidden" id="id" name="id" value="{{ id }}">
     </form>
     <button id="submit_button">提交</button>
+    <p id="waiting">wait</p>
 
 </div>
 
@@ -103,15 +85,14 @@
         var r = document.getElementById("rock").checked;
         var p = document.getElementById("paper").checked;
         var s = document.getElementById("scissors").checked;
-        alert("click");
         if (!(r || p || s)) {
             alert("请输入你的决策");
         } else {
-            // document.getElementById("submit").submit();
-            // send ajax
+            $('#submit_button').hide();
+            $('#waiting').text("等待下次决策中。。。");
             $.ajax({
                 type: 'post',
-                url: '/play/',
+                url: '/handon/',
                 data: {
                     id: {{ id }},
                     action_r: r,
@@ -119,7 +100,24 @@
                     action_s: s
                 },
                 success: function (json) {
-                    alert("return success " + json['info'])
+                    var records = json['records'];
+                    $('#history_table').empty();
+                    $('#history_table').append("<tr>\n" +
+                        "<th>轮数</th>\n" +
+                        "<th>你的策略</th>\n" +
+                        "<th>对手的策略</th>\n" +
+                        "</tr>");
+                    $.each(JSON.parse(records), function (i, record) {
+                        var tr = "<tr>\n" +
+                            "<th>" + record['count'] + "</th>\n" +
+                            "<th>" + record['action1'] + "</th>\n" +
+                            "<th>" + record['action2'] + "</th>\n" +
+                            "</tr>";
+                        $('#history_table').append(tr)
+                    });
+                    $('#submit_button').show();
+                    $('#waiting').text("")
+
                 }
             });
         }

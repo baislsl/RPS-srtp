@@ -1,14 +1,14 @@
 from django.http import HttpResponse
 from django.template import loader
-from .control.game import Game
 from django.shortcuts import render
 from .models import Record
 from django.utils import timezone
 from django.http import JsonResponse
-
+from .control.game import GameManager
+import json
 import time
 
-games = {}
+game_manager = GameManager()
 
 
 def index(request):
@@ -21,7 +21,6 @@ def play(request):
     print("id: ", id)
 
     # create a game for this player
-    games['id'] = Game('id')
     context = {"id": id}
 
     return render(request, 'rps/play.html', context)
@@ -30,29 +29,41 @@ def play(request):
 def handon(request):
     id = request.POST['id']
     data = {"info": "handon return"}
+    print(request.POST)
 
-    action = request.POST.getlist('action')
     if request.method == 'POST':
         if request.is_ajax():
-            data = {"info": "handon return"}
-    return JsonResponse(data)
+            action = -1
+            print(type(request.POST['action_r']))
+            if request.POST['action_r'] == 'true':
+                action = 0
+            elif request.POST['action_p'] == 'true':
+                action = 1
+            elif request.POST['action_s'] == 'true':
+                action = 2
 
-    record = Record()
-    record.user_id = str(id)
-    record.user_action = int(action[0])
-    record.competitor_id = "competitor-" + str(id)
-    record.competitor_action = (record.user_action + 1) % 3
-    record.date = timezone.now()
+            game = game_manager.of(id)
+            game.insert(id, action)
 
-    old_record_list = Record.objects.order_by('-date')
+            history = game.history(10)
+            data = []
+            for record in history:
+                record_dict = {
+                    "id1": record.id1,
+                    "id2": record.id2,
+                    "action1": record.action1,
+                    "action2": record.action2,
+                    "date": str(record.date),
+                    "count": record.count
+                }
+                data.append(record_dict)
+            print(data)
+            time.sleep(1)
+            print(json.dumps(data))
 
-    if len(old_record_list) == 0:
-        record.count = 1
-    else:
-        record.count = old_record_list[0].count + 1
+            ret = {
+                'records': json.dumps(data)
+            }
 
-    record.save()
-
-    record_list = Record.objects.filter(user_id=id).order_by('-date')[:10]
-    context = {'history_list': record_list}
-    return render(request, 'rps/play.html', context)
+            # In order to allow non-dict objects to be serialized set the safe parameter to False.
+            return JsonResponse(ret)

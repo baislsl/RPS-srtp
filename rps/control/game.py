@@ -41,7 +41,7 @@ class GameManager:
 
     def of(self, id):
         result = None
-        self.game_pool_lock.require()
+        self.game_pool_lock.acquire()
         for game in self.game_pool:
             if game.id1 == id or game.id2 == id:
                 result = game
@@ -59,7 +59,7 @@ class GameManager:
         :return:
         """
         id2 = "VirtualPlayer-" + id
-        self.game_pool_lock.require()
+        self.game_pool_lock.acquire()
         game = Game(id, id2)
         self.game_pool_lock.release()
         player = VirtualPlayer(id2, game)
@@ -86,7 +86,7 @@ class Game:
         :param count:
         :return:
         """
-        record_list = Record.objects.filter(compare_id=self.competition_id).order_by('-date')
+        record_list = Record.objects.filter(competition_id=self.competition_id).order_by('-date')
         if count == -1:
             return record_list
         else:
@@ -124,7 +124,7 @@ class Game:
         :return: 如果自己和对方都已经在该轮中给出决策或都没给出，返回True
                     如果只有一方给出，返回False
         """
-        self.lock.require()
+        self.lock.acquire()
         result = self.finished
         self.lock.release()
         return result
@@ -136,7 +136,7 @@ class Game:
         """
         # TODO: remove such naive code
         while True:
-            self.lock.require()
+            self.lock.acquire()
             result = self.finished
             record = self.last_record
             self.lock.release()
