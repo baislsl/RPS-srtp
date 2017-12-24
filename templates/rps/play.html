@@ -109,8 +109,8 @@
                     $.each(JSON.parse(records), function (i, record) {
                         var tr = "<tr>\n" +
                             "<th>" + record['count'] + "</th>\n" +
-                            "<th>" + record['action1'] + "</th>\n" +
-                            "<th>" + record['action2'] + "</th>\n" +
+                            "<th>" + record['your_action'] + "</th>\n" +
+                            "<th>" + record['competitor_action'] + "</th>\n" +
                             "</tr>";
                         $('#history_table').append(tr)
                     });

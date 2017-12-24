@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from .control.game import GameManager
 import json
 import time
+from .util import util
 
 game_manager = GameManager()
 
@@ -52,13 +53,19 @@ def handon(request):
             data = []
             for record in history:
                 record_dict = {
-                    "id1": record.id1,
-                    "id2": record.id2,
-                    "action1": record.action1,
-                    "action2": record.action2,
                     "date": str(record.date),
                     "count": record.count
                 }
+                if id == record.id1:
+                    record_dict['your_id'] = record.id1
+                    record_dict['competitor_id'] = record.id2
+                    record_dict['your_action'] = util.int2word(record.action1)
+                    record_dict['competitor_action'] = util.int2word(record.action2)
+                else:
+                    record_dict['your_id'] = record.id2
+                    record_dict['competitor_id'] = record.id1
+                    record_dict['your_action'] = util.int2word(record.action2)
+                    record_dict['competitor_action'] = util.int2word(record.action1)
                 data.append(record_dict)
             print(data)
             time.sleep(1)
