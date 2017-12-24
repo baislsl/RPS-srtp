@@ -43,7 +43,10 @@ def handon(request):
                 action = 2
 
             game = game_manager.of(id)
+            print(id, ": get game platform")
             game.insert(id, action)
+            game.wait_competitor_result()
+            print(id, ": inserted action")
 
             history = game.history(10)
             data = []
