@@ -10,10 +10,14 @@ class Platform:
     response_infos = {}
     counter = 0  # 轮数
     dic = {}  # 对手匹配情况
-    in_robot = False
+    in_robot = False  # 是否使用AI
 
     def __init__(self):
         pass
+
+    '''
+    输入实验者当前轮的决策
+    '''
 
     def set_user_response(self, id, action):
         self.response_count += 1
@@ -27,7 +31,12 @@ class Platform:
 
     def fetch_robot_response(self, id):
         # TODO: insert AI interface
+        # 需要的数据在数据库中可以查找,参考history.py
         return 0
+
+    '''
+    将一轮里所有数据写入数据库
+    '''
 
     def dump_log(self):
         if not self.is_full():
@@ -84,7 +93,14 @@ class Platform:
                 key = None
         return
 
+    '''
+    切换到 human vs AI
+    '''
+
     def switch_robot(self):
+        if self.in_robot:  # 已经切换过了
+            return
+
         self.in_robot = True
         ids = []
         for id1 in self.dic.keys():

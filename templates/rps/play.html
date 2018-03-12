@@ -99,6 +99,8 @@
                     action_s: s
                 },
                 success: function (json) {
+                    // TODO， 这里信息显示是不是应该详细点
+                    // TODO，数据导出后好像顺序乱了
                     var records = json['records'];
                     $('#history_table').empty();
                     $('#history_table').append("<tr>\n" +

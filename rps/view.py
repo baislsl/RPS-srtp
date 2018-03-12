@@ -4,7 +4,6 @@ from django.shortcuts import render
 from .models import Record
 from django.utils import timezone
 from django.http import JsonResponse
-from .control.game import GameManager
 import json
 import time
 from .util import util
@@ -15,6 +14,7 @@ from .control.history import History
 platform = Platform()
 
 
+# 配置页面，选择从human vs human切换到human vs AI
 def configure(request):
     if request.method == 'POST':
         id = request.POST['id']
