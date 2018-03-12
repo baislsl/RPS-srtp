@@ -8,8 +8,20 @@ from .control.game import GameManager
 import json
 import time
 from .util import util
+from .control.platform import Platform
+from .control.history import History
 
-game_manager = GameManager()
+# game_manager = GameManager()
+platform = Platform()
+
+
+def configure(request):
+    if request.method == 'POST':
+        id = request.POST['id']
+        if id == 'baislsl':
+            platform.switch_robot()
+            print("platform switch to robot now")
+    return render(request, 'rps/configure.html', {})
 
 
 def index(request):
@@ -43,13 +55,19 @@ def handon(request):
             elif request.POST['action_s'] == 'true':
                 action = 2
 
-            game = game_manager.of(id)
+            # game = game_manager.of(id)
             print(id, ": get game platform")
-            game.insert(id, action)
-            game.wait_competitor_result()
+            platform.set_user_response(id, action)
             print(id, ": inserted action")
 
-            history = game.history(10)
+            platform.dump_log()
+
+            # 等待
+            while not platform.is_empty():
+                pass
+            time.sleep(1)  ## 有必要更大？
+
+            history = History.get_record(id, 10)
             data = []
             for record in history:
                 record_dict = {
