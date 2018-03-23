@@ -32,6 +32,7 @@ class Platform:
     def fetch_robot_response(self, id):
         # TODO: insert AI interface
         # 需要的数据在数据库中可以查找,参考history.py
+
         return 0
 
     '''
