@@ -1,6 +1,7 @@
 from ..models import Record
 from django.utils import timezone
-
+from ..Agent import agent
+import numpy as np
 user_count = 2
 robot_name = 'robot_rps'
 
@@ -13,7 +14,7 @@ class Platform:
     in_robot = False  # 是否使用AI
 
     def __init__(self):
-        pass
+        self.agent = agent.Agent()
 
     '''
     输入实验者当前轮的决策
@@ -29,11 +30,38 @@ class Platform:
     def is_empty(self):
         return self.response_count == 0
 
-    def fetch_robot_response(self, id):
+    def fetch_robot_response(self, id, action):
         # TODO: insert AI interface
         # 需要的数据在数据库中可以查找,参考history.py
+        leng = max(self.agent.epoch_len, self.agent.his_len)
+        our_record1 = Record.objects.filter(id1=robot_name).order_by('count')[-leng:].values('action1', 'count')
+        our_record2 = Record.objects.filter(id2=robot_name).order_by('count')[-leng:].values('action2', 'count')
+        oppo_record1 = Record.objects.filter(id1=id).order_by('count')[-leng:].values('action1', 'count')
+        oppo_record2 = Record.objects.filter(id2=id).order_by('count')[-leng:].values('action2', 'count')
+        our_actions = list(our_record1)
+        our_actions.extend(list(our_record2))
+        sorted(our_actions, key=lambda x:x['count'])
+        our_actions = our_actions[-leng:]
+        oppo_actions = list(oppo_record1)
+        oppo_actions.extend(list(oppo_record2))
+        sorted(oppo_actions, key=lambda x: x['count'])
+        oppo_actions = oppo_actions[-leng:]
+        rewards = np.zeros((1, self.agent.epoch_len))
+        for i in range(1, self.agent.epoch_len+1):
+            if our_actions[-i] == oppo_actions[-i]:
+                rewards[:, i] = 1
+            elif (our_actions[-i] + 2 - oppo_actions[-i]) % 3 == 0:
+                rewards[:, -i] = 9
+            else:
+                rewards[:, -i] = 0
+        # actions (2, his_len), rewards (1, epoch_len)
+        actions = np.concatenate(([our_actions[-self.agent.epoch_len:]], [oppo_actions[-self.agent.epoch_len:]]), axis=0)
+        self.agent.feedback_update(actions, rewards)
 
-        return 0
+        our_action = self.agent.action()
+
+
+        return our_action
 
     '''
     将一轮里所有数据写入数据库
@@ -57,7 +85,7 @@ class Platform:
                 record.competition_id = id1 + ":" + robot_name
                 record.action1 = self.response_infos[id1]
                 # get robot response
-                record.action2 = self.fetch_robot_response(id1)
+                record.action2 = self.fetch_robot_response(id1, record.action1)
 
                 record.date = timezone.now()
                 record.count = self.counter
@@ -99,6 +127,7 @@ class Platform:
     '''
 
     def switch_robot(self):
+
         if self.in_robot:  # 已经切换过了
             return
 

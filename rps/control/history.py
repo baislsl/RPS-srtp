@@ -7,7 +7,7 @@ import random
 
 class History:
     @staticmethod
-    def get_record(id, count=-1):
+    def get_record(id, count=-1, reverse=True):
         record1 = Record.objects.filter(id1=id)
         record2 = Record.objects.filter(id2=id)
         print('In History')
@@ -24,5 +24,7 @@ class History:
 
         if count == -1:
             return records
+        elif reverse:
+            return records[-count:]
         else:
             return records[0: count]

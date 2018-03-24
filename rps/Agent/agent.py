@@ -3,12 +3,15 @@ import mxnet as mx
 from mxnet import nd, init, gluon, autograd
 import net
 
+
+
+# action: r:0, p:1, s:2
 class Agent:
     def __init__(self, his_len=10, epoch_len=10, lr=0.5):
         self.first = 0
         # TODO: add RNN to handle history if possible
         self.his_len = his_len  # length of history to look at(also the length of )
-        self.his = np.zeros((3, self.his_len)) # 3D array recording our actions and opponent actions
+        self.his = np.zeros((2, self.his_len)) # 2D array recording our actions and opponent actions
         self.epoch_len = epoch_len
         self.default_epoch_len = epoch_len
         self.reward = np.zeros((self.epoch_len * 2))
@@ -17,8 +20,8 @@ class Agent:
         # winning rate(0.7) and not-losing rate(0.3)
         self.threshold_low = 0.33
         self.threshold_high = 0.7
-        self.val_map = {"r": 0, "p": 1, "s": 2, "l": 0, "t": 1, "w": 2, "-": 0, "o": 1, "+": 2}
-        self.action_map = ['r', 'p', 's']
+        #self.val_map = {"r": 0, "p": 1, "s": 2, "l": 0, "t": 1, "w": 2, "-": 0, "o": 1, "+": 2}
+        #self.action_map = ['r', 'p', 's']
         # self.opponent_friendliness = np.zeros((1))
         # opponent friendliness defined as std of opponent policy
         self.net = net.AgentNet()
@@ -74,32 +77,37 @@ class Agent:
     # after each round is over, we can get some feedback
     # update bookkeeping info: his and reward
     # also we update our confidence and opponent friendliness
-    def feedback_update(self, opponent_action, reward):
-        self.his = self.his[:, 1:]
-        self.his = np.concatenate(self.his, )
-        self.reward = self.reward[1:]
+    def feedback_update(self, actions, rewards):
+        self.his = actions
+        self.reward = rewards
 
     # we put our history and info(our confidence and opponent friendliness)
     # and get a policy using neural network
-    def get_policy(self, input_arr, info, rewards):
+    def get_policy(self, input_arr, info, rewards, file_name='checkpt/net.params', pretrain=False):
+        if pretrain:
+            self.net.load_params(file_name)
         with autograd.record():
             out_policy = self.net(input_arr, info)
         head_grad = net.policy_gradient(out_policy, rewards)
         out_policy.backward(head_grad)
         self.trainer.step(1) # backpropagation
+        self.net.save_params(file_name)
         return out_policy
 
 
     def get_confidence(self, alpha=0.7):
         # return alpha * win_rate + (1-alpha)*not_lose_rate
-        win_his = list(self.his[2])
-        win_time = win_his.count('w')
-        tie_time = win_his.count('t')
-        return (alpha * win_time + (1-alpha) * tie_time)/len(win_his)
+        win_time = tie_time = 0
+        for i in range(self.his_len):
+            if self.his[0, i] == self.his[1, i]:
+                tie_time += 1
+            elif (self.his[0, i] + 2 - self.his[1, i]) % 3 == 0:
+                win_time += 1
+        return (alpha * win_time + (1-alpha) * tie_time)/self.his_len
 
 
     def get_opponent_friendliness(self):
-        opponent_his = [self.val_map[i] for i in self.his[1]]
+        opponent_his = self.his[1]
         return np.std(opponent_his)
 
     def generate_action(self, p): # p shape(1,3), probability of choosing each action
@@ -114,11 +122,8 @@ class Agent:
 
     def his2num(self):
         # turn a 3D array history to 1D array of number as the input of neural net
-        # one entry of history: action(3), action(3), result(3)
-        hisnum = nd.zeros((1, self.his_len))
-        for i in range(self.his_len):
-            hisnum[0, i] = sum([self.val_map[self.his[0, j]] for j in range(3)])
-        return hisnum
+        # one entry of history: action(3), action(3)
+        return self.his[0] * 3 + self.his[1]
 
 
 
