@@ -18,8 +18,8 @@ def int2word(i):
 
 def earn(action1, action2):
     table = [
-        [0, -1, 1],
-        [1, 0, -1],
-        [-1, 1, 0]
+        [1, 0, 9],
+        [9, 1, 0],
+        [0, 9, 1]
     ]
     return table[action1][action2]

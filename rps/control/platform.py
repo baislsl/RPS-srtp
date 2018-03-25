@@ -2,6 +2,9 @@ from ..models import Record
 from django.utils import timezone
 from ..Agent import agent
 import numpy as np
+from ..util import util
+from . import history
+
 user_count = 2
 robot_name = 'robot_rps'
 
@@ -34,32 +37,31 @@ class Platform:
         # TODO: insert AI interface
         # 需要的数据在数据库中可以查找,参考history.py
         leng = max(self.agent.epoch_len, self.agent.his_len)
-        our_record1 = Record.objects.filter(id1=robot_name).order_by('count')[-leng:].values('action1', 'count')
-        our_record2 = Record.objects.filter(id2=robot_name).order_by('count')[-leng:].values('action2', 'count')
-        oppo_record1 = Record.objects.filter(id1=id).order_by('count')[-leng:].values('action1', 'count')
-        oppo_record2 = Record.objects.filter(id2=id).order_by('count')[-leng:].values('action2', 'count')
-        our_actions = list(our_record1)
-        our_actions.extend(list(our_record2))
-        sorted(our_actions, key=lambda x:x['count'])
-        our_actions = our_actions[-leng:]
-        oppo_actions = list(oppo_record1)
-        oppo_actions.extend(list(oppo_record2))
-        sorted(oppo_actions, key=lambda x: x['count'])
-        oppo_actions = oppo_actions[-leng:]
+
+        our_record1 = list(Record.objects.filter(id1=robot_name).order_by('count'))[-leng:]
+        our_record2 = list(Record.objects.filter(id2=robot_name).order_by('count'))[-leng:]
+        our_actions = [record.action1 for record in our_record1]
+        our_actions.extend([record.action2 for record in our_record2])
+
+        oppo_record1 = list(Record.objects.filter(id1=id).order_by('count'))[-leng:]
+        oppo_record2 = list(Record.objects.filter(id2=id).order_by('count'))[-leng:]
+        oppo_actions = [record.action1 for record in oppo_record1]
+        oppo_actions.extend([record.action2 for record in oppo_record2])
+
         rewards = np.zeros((1, self.agent.epoch_len))
-        for i in range(1, self.agent.epoch_len+1):
-            if our_actions[-i] == oppo_actions[-i]:
-                rewards[:, i] = 1
-            elif (our_actions[-i] + 2 - oppo_actions[-i]) % 3 == 0:
-                rewards[:, -i] = 9
-            else:
-                rewards[:, -i] = 0
+        # TODO: 不清楚你这里时要搞什么
+        # for i in range(self.agent.epoch_len + 1):
+        #     print('our:', our_actions[-i])
+        #     rewards[:, -i] = util.earn(int(our_actions[-i]), int(oppo_actions[-i]))
+
         # actions (2, his_len), rewards (1, epoch_len)
-        actions = np.concatenate(([our_actions[-self.agent.epoch_len:]], [oppo_actions[-self.agent.epoch_len:]]), axis=0)
+        actions = np.concatenate(([our_actions[-self.agent.epoch_len:]], [oppo_actions[-self.agent.epoch_len:]]),
+                                 axis=0)
         self.agent.feedback_update(actions, rewards)
 
         our_action = self.agent.action()
 
+        print("response for ", id, "action ", our_action)
 
         return our_action
 
