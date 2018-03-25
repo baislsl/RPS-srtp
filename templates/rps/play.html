@@ -17,6 +17,11 @@
     历史对战记录
     <table border="1" id="history_table">
     </table>
+    <br>
+    <p>
+        第<b id="counter">1</b>轮
+    </p>
+
 
 </div>
 
@@ -40,7 +45,7 @@
         <input type="hidden" id="id" name="id" value="{{ id }}">
     </form>
     <button id="submit_button">提交</button>
-    <p id="waiting">wait</p>
+    <p id="waiting"></p>
 
 </div>
 
@@ -107,20 +112,28 @@
                         "<th>轮数</th>\n" +
                         "<th>你的策略</th>\n" +
                         "<th>对手的策略</th>\n" +
+                        "<th>收益</th>\n" +
                         "</tr>");
                     $.each(JSON.parse(records), function (i, record) {
                         var tr = "<tr>\n" +
                             "<th>" + record['count'] + "</th>\n" +
                             "<th>" + record['your_action'] + "</th>\n" +
                             "<th>" + record['competitor_action'] + "</th>\n" +
+                            "<th>" + record['earn'] + "</th>\n" +
                             "</tr>";
                         $('#history_table').append(tr)
                     });
                     $('#submit_button').show();
-                    $('#waiting').text("")
+                    $('#waiting').text("");
+                    $('#counter').text(json['counter'])
 
                 }
             });
+        }
+
+
+        function result(action1, action2) {
+
         }
 
     }

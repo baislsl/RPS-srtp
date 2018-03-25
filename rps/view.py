@@ -79,18 +79,21 @@ def handon(request):
                     record_dict['competitor_id'] = record.id2
                     record_dict['your_action'] = util.int2word(record.action1)
                     record_dict['competitor_action'] = util.int2word(record.action2)
+                    record_dict['earn'] = util.earn(record.action1, record.action2)
                 else:
                     record_dict['your_id'] = record.id2
                     record_dict['competitor_id'] = record.id1
                     record_dict['your_action'] = util.int2word(record.action2)
                     record_dict['competitor_action'] = util.int2word(record.action1)
+                    record_dict['earn'] = util.earn(record.action2, record.action1)
                 data.append(record_dict)
             print(data)
             time.sleep(1)
             print(json.dumps(data))
 
             ret = {
-                'records': json.dumps(data)
+                'records': json.dumps(data),
+                'counter': platform.counter + 1    # 轮数
             }
 
             # In order to allow non-dict objects to be serialized set the safe parameter to False.

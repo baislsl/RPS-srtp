@@ -1,7 +1,7 @@
 import numpy as np
 import mxnet as mx
 from mxnet import nd, init, gluon, autograd
-import net
+from . import net
 
 
 

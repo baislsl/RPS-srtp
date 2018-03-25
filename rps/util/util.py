@@ -15,3 +15,11 @@ def int2word(i):
     else:
         return '剪刀'
 
+
+def earn(action1, action2):
+    table = [
+        [0, -1, 1],
+        [1, 0, -1],
+        [-1, 1, 0]
+    ]
+    return table[action1][action2]
