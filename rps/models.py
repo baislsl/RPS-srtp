@@ -10,3 +10,10 @@ class Record(models.Model):
 
     count = models.IntegerField()
     date = models.DateTimeField()
+
+    def action(self, id):
+        if self.id1 == id:
+            return self.action1
+        else:
+            assert self.id2 == id
+            return self.action2

@@ -3,9 +3,9 @@ from django.utils import timezone
 from ..Agent import agent
 import numpy as np
 from ..util import util
-from . import history
+from django.db.models import Q
 
-user_count = 1
+user_count = 2
 robot_name = 'robot_rps'
 
 
@@ -39,20 +39,19 @@ class Platform:
 
         leng = max(self.agent.epoch_len, self.agent.his_len)
         if self.agent.first >= leng:
-            our_record1 = list(Record.objects.filter(id1=robot_name).order_by('count'))[-leng:]
-            our_record2 = list(Record.objects.filter(id2=robot_name).order_by('count'))[-leng:]
-            our_actions = [(record.action1,record.count) for record in our_record1]
-            our_actions.extend([(record.action2, record.count) for record in our_record2])
-            sorted(our_actions, key=lambda x:x[1], reverse=True)
-            our_actions = [our_actions[i][0] for i in range(self.agent.his_len)]
-            oppo_record1 = list(Record.objects.filter(id1=id).order_by('count'))[-leng:]
-            oppo_record2 = list(Record.objects.filter(id2=id).order_by('count'))[-leng:]
-            oppo_actions = [(record.action1, record.count) for record in oppo_record1]
-            oppo_actions.extend([(record.action2, record.count) for record in oppo_record2])
-            sorted(oppo_actions, key=lambda x: x[1], reverse=True)
-            oppo_actions = [oppo_actions[i][0] for i in range(self.agent.his_len)]
+            our_actions = Record.objects \
+                .filter(Q(id1=robot_name) | Q(id2=robot_name)) \
+                .order_by('count')
+            our_actions = [r.action(robot_name) for r in our_actions][-leng:]
+
+            oppo_actions = Record.objects \
+                .filter(Q(id1=id) | Q(id2=id)) \
+                .order_by('count')
+            oppo_actions = [r.action(id) for r in oppo_actions][-leng:]
+
             print('our', our_actions)
-            print('oppo',oppo_actions)
+            print('oppo', oppo_actions)
+
             rewards = np.zeros((1, self.agent.epoch_len))
             for i in range(1, self.agent.epoch_len + 1):
                 print('our:', our_actions[-i])
@@ -63,11 +62,11 @@ class Platform:
                                      axis=0)
             self.agent.feedback_update(actions, rewards)
 
-        our_action = self.agent.action()
+        our_actions = self.agent.action()
 
-        print("response for ", id, "action ", our_action)
+        print("response for ", id, "action ", our_actions)
 
-        return our_action
+        return our_actions
 
     '''
     将一轮里所有数据写入数据库
