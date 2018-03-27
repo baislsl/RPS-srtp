@@ -56,7 +56,7 @@ class Platform:
                 rewards[:, -i] = util.earn(int(our_actions[-i]), int(oppo_actions[-i]))
 
             # actions (2, his_len), rewards (1, epoch_len)
-            actions = np.concatenate(([our_actions[-self.agent.epoch_len:]], [oppo_actions[-self.agent.epoch_len:]]),
+            actions = np.concatenate(([our_actions[-self.agent.his_len:]], [oppo_actions[-self.agent.his_len:]]),
                                      axis=0)
             self.agent.feedback_update(actions, rewards)
 

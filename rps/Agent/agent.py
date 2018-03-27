@@ -83,10 +83,10 @@ class Agent:
 
     # we put our history and info(our confidence and opponent friendliness)
     # and get a policy using neural network
-    def get_policy(self, input_arr, info, rewards, file_name='checkpt/net.params', pretrain=False):
+    def get_policy(self, input_arr, info, rewards, file_name='./net.params', pretrain=False):
         if pretrain:
             self.net.load_params(file_name)
-        open(file_name, 'a')
+        #open(file_name, 'a')
         with autograd.record():
             out_policy = self.net(input_arr, info)
         head_grad = net.policy_gradient(out_policy, rewards)
@@ -111,9 +111,9 @@ class Agent:
 
     def generate_action(self, p):  # p shape(1,3), probability of choosing each action
         rand = np.random.rand()
-        if rand <= p[0]:
+        if rand <= p[0, 0]:
             return 0
-        elif rand <= p[0] + p[1]:
+        elif rand <= p[0, 0] + p[0, 1]:
             return 1
         else:
             return 2
