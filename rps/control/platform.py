@@ -39,21 +39,19 @@ class Platform:
 
         leng = max(self.agent.epoch_len, self.agent.his_len)
         if self.agent.first >= leng:
-            our_actions = Record.objects \
+            query_set = Record.objects \
                 .filter(Q(id1=robot_name) | Q(id2=robot_name)) \
-                .order_by('count')
-            our_actions = [r.action(robot_name) for r in our_actions][-leng:]
-
-            oppo_actions = Record.objects \
                 .filter(Q(id1=id) | Q(id2=id)) \
                 .order_by('count')
-            oppo_actions = [r.action(id) for r in oppo_actions][-leng:]
+            our_actions = [r.action(robot_name) for r in query_set][-leng:]
+            oppo_actions = [r.action(id) for r in query_set][-leng:]
 
             print('our', our_actions)
             print('oppo', oppo_actions)
 
             rewards = np.zeros((1, self.agent.epoch_len))
             for i in range(1, self.agent.epoch_len + 1):
+                print('i=', i)
                 print('our:', our_actions[-i])
                 rewards[:, -i] = util.earn(int(our_actions[-i]), int(oppo_actions[-i]))
 

@@ -7,7 +7,7 @@ from . import net
 
 # action: r:0, p:1, s:2
 class Agent:
-    def __init__(self, his_len=10, epoch_len=10, lr=0.5):
+    def __init__(self, his_len=2, epoch_len=2, lr=0.5):
         self.first = 0
         # TODO: add RNN to handle history if possible
         self.his_len = his_len  # length of history to look at(also the length of )
