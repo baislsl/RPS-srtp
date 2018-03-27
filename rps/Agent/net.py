@@ -6,7 +6,8 @@ from mxnet import nd, autograd, gluon
 class ConcatNet(gluon.nn.Block):
     def __init__(self,net1,**kwargs):
         super(ConcatNet,self).__init__(**kwargs)
-        self.net1 = net1
+        with self.name_scope():
+            self.net1 = net1
     def forward(self,x1,x2):
         return nd.concat(*(x1, self.net1(x2)))
 
@@ -16,9 +17,10 @@ class AgentNet(gluon.nn.Block):
         super(AgentNet, self).__init__(**kwargs)
         self.units1 = units1
         self.units2 = units2
-        self.net = ConcatNet(gluon.nn.Dense(self.units1, activation='relu'))
-        self.net2 = gluon.nn.Dense(self.units2, activation='relu')
-        self.net3 = gluon.nn.Dense(3)
+        with self.name_scope():
+            self.net = ConcatNet(gluon.nn.Dense(self.units1, activation='relu'))
+            self.net2 = gluon.nn.Dense(self.units2, activation='relu')
+            self.net3 = gluon.nn.Dense(3)
     def forward(self, x1, x2):
         out = self.net(x1, x2)
         out = self.net2(out)

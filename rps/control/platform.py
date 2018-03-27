@@ -17,7 +17,7 @@ class Platform:
     in_robot = False  # 是否使用AI
 
     def __init__(self):
-        self.agent = agent.Agent()
+        self.agent = agent.Agent(his_len=2, epoch_len=2)
 
     '''
     输入实验者当前轮的决策
@@ -38,7 +38,7 @@ class Platform:
         # 需要的数据在数据库中可以查找,参考history.py
 
         leng = max(self.agent.epoch_len, self.agent.his_len)
-        if self.agent.first >= leng:
+        if self.agent.id_first(id) >= leng:
             query_set = Record.objects \
                 .filter(Q(id1=robot_name) | Q(id2=robot_name)) \
                 .filter(Q(id1=id) | Q(id2=id)) \
@@ -60,7 +60,7 @@ class Platform:
                                      axis=0)
             self.agent.feedback_update(actions, rewards)
 
-        our_actions = self.agent.action()
+        our_actions = self.agent.action(id)
 
         print("response for ", id, "action ", our_actions)
 
