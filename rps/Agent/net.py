@@ -19,7 +19,12 @@ class AgentNet(gluon.nn.Block):
         self.net = ConcatNet(gluon.nn.Dense(self.units1, activation='relu'))
         self.net2 = gluon.nn.Dense(self.units2, activation='relu')
         self.net3 = gluon.nn.Dense(3)
-
+    def forward(self, x1, x2):
+        out = self.net(x1, x2)
+        out = self.net2(out)
+        out = self.net3(out)
+        out = nd.softmax(out)
+        return out
 # given a policy, return a gradient
 # policy: shape(1, 3), probability of choosing each action
 # rewards: reward using this policy, shape (1, epoch_len)
