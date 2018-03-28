@@ -39,15 +39,17 @@ def play(request):
     return render(request, 'rps/play.html', context)
 
 
-def handon(request):
+def handon(request, debug=False):
     id = request.POST['id']
     data = {"info": "handon return"}
-    print(request.POST)
+    if debug:
+        print(request.POST)
 
     if request.method == 'POST':
         if request.is_ajax():
             action = -1
-            print(type(request.POST['action_r']))
+            if debug:
+                print(type(request.POST['action_r']))
             if request.POST['action_r'] == 'true':
                 action = 0
             elif request.POST['action_p'] == 'true':
@@ -56,9 +58,11 @@ def handon(request):
                 action = 2
 
             # game = game_manager.of(id)
-            print(id, ": get game platform")
+            if debug:
+                print(id, ": get game platform")
             platform.set_user_response(id, action)
-            print(id, ": inserted action")
+            if debug:
+                print(id, ": inserted action")
 
             platform.dump_log()
 
@@ -87,9 +91,11 @@ def handon(request):
                     record_dict['competitor_action'] = util.int2word(record.action1)
                     record_dict['earn'] = util.earn(record.action2, record.action1)
                 data.append(record_dict)
-            print(data)
+            if debug:
+                print(data)
             time.sleep(1)
-            print(json.dumps(data))
+            if debug:
+                print(json.dumps(data))
 
             ret = {
                 'records': json.dumps(data),

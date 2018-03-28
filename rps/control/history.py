@@ -10,9 +10,9 @@ class History:
     def get_record(id, count=-1, reverse=True):
         record1 = Record.objects.filter(id1=id)
         record2 = Record.objects.filter(id2=id)
-        print('In History')
-        print(record1)
-        print(record2)
+        #print('In History')
+        #print(record1)
+        #print(record2)
         records = []
         for r in record1:
             records.append(r)

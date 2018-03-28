@@ -17,7 +17,8 @@ class Platform:
     in_robot = False  # 是否使用AI
 
     def __init__(self):
-        self.agent = agent.Agent(his_len=2, epoch_len=2)
+        self.agent = agent.Agent(his_len=5, epoch_len=5
+                                 , debug=True, lr=1)
 
     '''
     输入实验者当前轮的决策
@@ -51,8 +52,8 @@ class Platform:
 
             rewards = np.zeros((1, self.agent.epoch_len))
             for i in range(1, self.agent.epoch_len + 1):
-                print('i=', i)
-                print('our:', our_actions[-i])
+                #print('i=', i)
+                #print('our:', our_actions[-i])
                 rewards[:, -i] = util.earn(int(our_actions[-i]), int(oppo_actions[-i]))
 
             # actions (2, his_len), rewards (1, epoch_len)

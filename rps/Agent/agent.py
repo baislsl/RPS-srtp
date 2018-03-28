@@ -3,10 +3,19 @@ import mxnet as mx
 from mxnet import nd, init, gluon, autograd
 from . import net
 
+def getNet():
+    net = gluon.nn.Sequential()
+    with net.name_scope():
+        net.add(gluon.nn.Flatten())
+        #net.add(gluon.nn.Dense(256, activation="relu"))
+        net.add(gluon.nn.Dense(3))
+
+    return net
+
 
 # action: r:0, p:1, s:2
 class Agent:
-    def __init__(self, his_len=10, epoch_len=10, lr=0.5):
+    def __init__(self, his_len=10, epoch_len=10, lr=0.3, debug=False):
         self.first = {}
         # TODO: add RNN to handle history if possible
         self.his_len = his_len  # length of history to look at(also the length of )
@@ -23,12 +32,13 @@ class Agent:
         # self.action_map = ['r', 'p', 's']
         # self.opponent_friendliness = np.zeros((1))
         # opponent friendliness defined as std of opponent policy
-        self.net = net.AgentNet()
+        self.net = getNet()#net.AgentNet()
         self.net.initialize(init=init.Xavier())
         self.lr = lr
         self.default_lr = lr
         self.trainer = gluon.Trainer(self.net.collect_params(),
                                      'sgd', {'learning_rate': self.lr})
+        self.debug = debug
 
     # return a action given current information
     def action(self, id):  # id is a string
@@ -37,29 +47,31 @@ class Agent:
             self.first[id] = 0
         if self.first[id] < self.his_len:
             # take turn to return 0, 1, 0, 1, ...
-            if self.get_confidence() > self.threshold_high:
-                our_action = self.first[id] % 2
-            else:
-                our_action = np.random.randint(2)  # self.first % 2
+            # if self.get_confidence() < self.threshold_low:
+            #     our_action = np.random.randint(2)  # self.first % 2
+            # else:
+            #     our_action = self.first[id] % 2
+            our_action = self.first[id] % 2
+            #our_action = np.random.randint(2)
             self.first[id] += 1
         else:  # his is ready to feed
             # if we are losing, we change our strategy more rapidly
             # by (changing lr in gradient descent) or smaller epoch size?
-            confidence = self.get_confidence()
-            if confidence < self.threshold_low:
-                # self.lr = 3 * self.default_lr
-                # self.trainer.set_learning_rate(self.lr)
-                self.epoch_len = max(round(self.default_epoch_len / 3), 1)
-            elif confidence > self.threshold_high:
-                self.lr = 1 / 3 * self.default_lr
-                self.trainer.set_learning_rate(self.lr)
-                self.epoch_len = round(self.default_epoch_len * 1.5)
-            else:
-                if self.lr != self.default_lr:
-                    self.lr = self.default_lr
-                    self.trainer.set_learning_rate(self.lr)
-                if self.epoch_len != self.default_epoch_len:
-                    self.epoch_len = self.default_epoch_len
+            # confidence = self.get_confidence()
+            # if confidence < self.threshold_low:
+            #     # self.lr = 3 * self.default_lr
+            #     # self.trainer.set_learning_rate(self.lr)
+            #     self.epoch_len = max(round(self.default_epoch_len / 3), 1)
+            # elif confidence > self.threshold_high:
+            #     self.lr = 1 / 3 * self.default_lr
+            #     self.trainer.set_learning_rate(self.lr)
+            #     self.epoch_len = round(self.default_epoch_len * 1.5)
+            # else:
+            #     if self.lr != self.default_lr:
+            #         self.lr = self.default_lr
+            #         self.trainer.set_learning_rate(self.lr)
+            #     if self.epoch_len != self.default_epoch_len:
+            #         self.epoch_len = self.default_epoch_len
 
             # collect info for EPOCH_SIZE epochs and then change the policy
             info = nd.zeros((1, 2))
@@ -69,6 +81,11 @@ class Agent:
             rewards = nd.array(self.reward[:self.epoch_len].reshape(1, -1))
             pro = self.get_policy(input_arr, info, rewards)
             our_action = self.generate_action(pro)
+            if self.debug:
+                print('confidence: ', info[0, 0])
+                print('friendness ', info[0, 1])
+                print('pro ', pro)
+                print('rewards', rewards)
 
         # append out_action to self.his[0]
         self.last_action = our_action
@@ -79,7 +96,7 @@ class Agent:
     # also we update our confidence and opponent friendliness
     def feedback_update(self, actions, rewards):
         self.his = actions
-        self.reward = rewards
+        self.reward = rewards - 10/3
 
     # we put our history and info(our confidence and opponent friendliness)
     # and get a policy using neural network
@@ -88,8 +105,12 @@ class Agent:
             self.net.load_params(file_name)
         #open(file_name, 'a')
         with autograd.record():
-            out_policy = self.net(input_arr, info)
+            policy = self.net(nd.concat(input_arr, info))
+            out_policy = nd.softmax(policy)
         head_grad = net.policy_gradient(out_policy, rewards)
+        if self.debug:
+            print('head grad', head_grad)
+            print('weight', [(i, j.list_data()) for i, j in self.net.collect_params().items()])
         out_policy.backward(head_grad)
         self.trainer.step(1)  # backpropagation
         self.net.save_params(file_name)
@@ -106,8 +127,9 @@ class Agent:
         return (alpha * win_time + (1 - alpha) * tie_time) / self.his_len
 
     def get_opponent_friendliness(self):
-        opponent_his = self.his[1]
-        return np.std(opponent_his)
+        check_len = min(5, self.his_len)
+        opponent_his = self.his[1][-check_len:]
+        return 1 - np.std(opponent_his)
 
     def generate_action(self, p):  # p shape(1,3), probability of choosing each action
         rand = np.random.rand()
