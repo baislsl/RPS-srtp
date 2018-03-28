@@ -24,7 +24,7 @@ class TestClass(TestCase):
 
             records.append(record)
 
-        for i in range(20):
+        for _ in range(20):
             our_actions = [r.action(robot_name) for r in records][-leng:]
             oppo_actions = [r.action('12') for r in records][-leng:]
 
@@ -47,5 +47,7 @@ class TestClass(TestCase):
             record.action1 = i % 2
             record.id1 = '12'
             record.id2 = robot_name
-            records.append(records)
+            records.append(record)
+
+            # print("robot=", record.action2)
 
