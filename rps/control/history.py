@@ -20,7 +20,7 @@ class History:
             records.append(r)
 
         if len(record1) != 0 and len(record2) != 0:
-            sorted(records, key=lambda x: x.count)
+            records = sorted(records, key=lambda x: x.count)
 
         if count == -1:
             return records
