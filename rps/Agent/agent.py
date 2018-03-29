@@ -15,7 +15,7 @@ def getNet():
 
 # action: r:0, p:1, s:2
 class Agent:
-    def __init__(self, his_len=10, epoch_len=10, lr=0.3, temp=5, debug=False):
+    def __init__(self, his_len=10, epoch_len=10, lr=0.3, temp=20, temp_max=200, debug=False):
         self.first = {}
         # TODO: add RNN to handle history if possible
         self.his_len = his_len  # length of history to look at(also the length of )
@@ -40,6 +40,7 @@ class Agent:
                                      'sgd', {'learning_rate': self.lr})
         self.debug = debug
         self.temp = temp
+        self.temp_max = temp_max
         self.default_temp = temp
 
     # return a action given current information
@@ -64,7 +65,7 @@ class Agent:
                 # self.lr = 3 * self.default_lr
                 # self.trainer.set_learning_rate(self.lr)
                 #self.epoch_len = max(round(self.default_epoch_len / 3), 1)
-                self.temp = min(self.temp * 2, 100)
+                self.temp = min(self.temp * 2, self.temp_max)
             elif confidence > self.threshold_high:
                 # self.lr = 1 / 3 * self.default_lr
                 # self.trainer.set_learning_rate(self.lr)
