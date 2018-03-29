@@ -26,7 +26,7 @@ SECRET_KEY = 'dsm_2+ym(y-*$yaztsdx49o05s4p4z=p0=uub=wj)#y&h9+x6h'
 DEBUG = True
 
 # host
-ALLOWED_HOSTS = ['222.205.55.62', '10.10.70.81']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '222.205.55.62', '10.10.70.81']
 
 
 # Application definition
@@ -125,4 +125,3 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static', 'rps')
 ]
-c
