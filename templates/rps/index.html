@@ -2,29 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Help</title>
+    <title>登录界面</title>
 </head>
 
 <body>
-<h1>Help information before experiment</h1>
+<h1>剪刀石头布博弈实验</h1>
+
+<p>
+请在工作人员宣布开始之后，再进行操作。
+</p>
 
 <form id="submit" method="post" action="/play/">
     {% csrf_token %}
     <div id="input-id">
-        输入你的id<br>
+        学号<br>
         <input type="text" id="id" name="id">
     </div>
 
-    <button id="begin">开始</button>
+    <button id="begin">登录</button>
 </form>
 
 <script language="JavaScript">
     document.getElementById("begin").onclick = function onBegin() {
         var userId = document.getElementById("id").value;
         if (userId.length === 0) {
-            alert("请输入ID");
+            alert("请输入学号");
         } else {
-            {#alert("你的ID为" + userId);#}
+            {#alert("你的学号为" + userId);#}
             document.getElementById("submit").submit();
         }
 
