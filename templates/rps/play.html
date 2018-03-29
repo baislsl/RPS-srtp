@@ -14,7 +14,7 @@
 
 实验界面
 <div class="history">
-    历史对战记录
+    近10轮对战记录
     <table border="1" id="history_table">
     </table>
     <br>
@@ -93,7 +93,7 @@
             alert("请输入你的决策");
         } else {
             $('#submit_button').hide();
-            $('#waiting').text("等待下次决策中。。。");
+            $('#waiting').text("请等待结果……");
             $.ajax({
                 type: 'post',
                 url: '/handon/',
@@ -112,7 +112,7 @@
                         "<th>轮数</th>\n" +
                         "<th>你的策略</th>\n" +
                         "<th>对手的策略</th>\n" +
-                        "<th>收益</th>\n" +
+                        "<th>你的收益</th>\n" +
                         "</tr>");
                     $.each(JSON.parse(records), function (i, record) {
                         var tr = "<tr>\n" +
