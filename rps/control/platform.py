@@ -18,7 +18,7 @@ class Platform:
 
     def __init__(self):
         self.agent = agent.Agent(his_len=5, epoch_len=5
-                                 , debug=True, lr=1)
+                                 , debug=True, lr=0.3)
 
     '''
     输入实验者当前轮的决策

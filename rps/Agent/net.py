@@ -31,7 +31,7 @@ class AgentNet(gluon.nn.Block):
 # policy: shape(1, 3), probability of choosing each action
 # rewards: reward using this policy, shape (1, epoch_len)
 def policy_gradient(policy, rewards, lr=1, gamma=0.9, small=1e-8,
-                    clip=True, theta=1e8): # small helps it to be stable
+                    clip=True, debug=True, theta=1e9): # small helps it to be stable
     T = rewards.shape[1]
     # head_grad = nd.zeros_like(policy)
     factor = 0
@@ -39,6 +39,8 @@ def policy_gradient(policy, rewards, lr=1, gamma=0.9, small=1e-8,
         G = rewards[:, t]
         factor += gamma**(T-1-t) * G
     grad = -lr * factor * (1/(policy+small))      # to match gradient descent
+    if debug:
+        print('pg factor', factor)
     if clip:
         if np.any((np.abs(grad.asnumpy()) > theta)):
            grad[:] *= theta / nd.sum(grad**2)

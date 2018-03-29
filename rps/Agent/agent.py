@@ -15,7 +15,7 @@ def getNet():
 
 # action: r:0, p:1, s:2
 class Agent:
-    def __init__(self, his_len=10, epoch_len=10, lr=0.3, debug=False):
+    def __init__(self, his_len=10, epoch_len=10, lr=0.3, temp=5, debug=False):
         self.first = {}
         # TODO: add RNN to handle history if possible
         self.his_len = his_len  # length of history to look at(also the length of )
@@ -39,6 +39,8 @@ class Agent:
         self.trainer = gluon.Trainer(self.net.collect_params(),
                                      'sgd', {'learning_rate': self.lr})
         self.debug = debug
+        self.temp = temp
+        self.default_temp = temp
 
     # return a action given current information
     def action(self, id):  # id is a string
@@ -57,21 +59,25 @@ class Agent:
         else:  # his is ready to feed
             # if we are losing, we change our strategy more rapidly
             # by (changing lr in gradient descent) or smaller epoch size?
-            # confidence = self.get_confidence()
-            # if confidence < self.threshold_low:
-            #     # self.lr = 3 * self.default_lr
-            #     # self.trainer.set_learning_rate(self.lr)
-            #     self.epoch_len = max(round(self.default_epoch_len / 3), 1)
-            # elif confidence > self.threshold_high:
-            #     self.lr = 1 / 3 * self.default_lr
-            #     self.trainer.set_learning_rate(self.lr)
-            #     self.epoch_len = round(self.default_epoch_len * 1.5)
-            # else:
-            #     if self.lr != self.default_lr:
-            #         self.lr = self.default_lr
-            #         self.trainer.set_learning_rate(self.lr)
-            #     if self.epoch_len != self.default_epoch_len:
-            #         self.epoch_len = self.default_epoch_len
+            confidence = self.get_confidence()
+            if confidence < self.threshold_low:
+                # self.lr = 3 * self.default_lr
+                # self.trainer.set_learning_rate(self.lr)
+                #self.epoch_len = max(round(self.default_epoch_len / 3), 1)
+                self.temp = min(self.temp * 2, 100)
+            elif confidence > self.threshold_high:
+                # self.lr = 1 / 3 * self.default_lr
+                # self.trainer.set_learning_rate(self.lr)
+                # self.epoch_len = round(self.default_epoch_len * 1.5)
+                self.temp = max(self.temp / 2, 1)
+            else:
+                # if self.lr != self.default_lr:
+                #     self.lr = self.default_lr
+                #     self.trainer.set_learning_rate(self.lr)
+                # if self.epoch_len != self.default_epoch_len:
+                #     self.epoch_len = self.default_epoch_len
+                #if self.temp != self.default_temp:
+                self.temp = self.default_temp
 
             # collect info for EPOCH_SIZE epochs and then change the policy
             info = nd.zeros((1, 2))
@@ -100,17 +106,24 @@ class Agent:
 
     # we put our history and info(our confidence and opponent friendliness)
     # and get a policy using neural network
-    def get_policy(self, input_arr, info, rewards, file_name='./net.params', pretrain=False):
+    def get_policy(self, input_arr, info, rewards, file_name='./net.params', pretrain=False, small=1e-8):
         if pretrain:
             self.net.load_params(file_name)
         #open(file_name, 'a')
         with autograd.record():
             policy = self.net(nd.concat(input_arr, info))
-            out_policy = nd.softmax(policy)
+            if np.any(1.0 - nd.softmax(policy).asnumpy() <= small):
+               out_policy = nd.softmax(policy / self.temp)
+            else:
+                out_policy = nd.softmax(policy)
         head_grad = net.policy_gradient(out_policy, rewards)
         if self.debug:
+            print('policy', policy)
+            print('temp', self.temp)
+            print('out policy', out_policy)
             print('head grad', head_grad)
             print('weight', [(i, j.list_data()) for i, j in self.net.collect_params().items()])
+            print('grad', [(i, j.list_grad()) for i, j in self.net.collect_params().items()])
         out_policy.backward(head_grad)
         self.trainer.step(1)  # backpropagation
         self.net.save_params(file_name)
