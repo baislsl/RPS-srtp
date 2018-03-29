@@ -7,7 +7,7 @@ def getNet():
     net = gluon.nn.Sequential()
     with net.name_scope():
         net.add(gluon.nn.Flatten())
-        #net.add(gluon.nn.Dense(256, activation="relu"))
+        net.add(gluon.nn.Dense(256, activation="relu"))
         net.add(gluon.nn.Dense(3))
 
     return net
@@ -15,7 +15,7 @@ def getNet():
 
 # action: r:0, p:1, s:2
 class Agent:
-    def __init__(self, his_len=10, epoch_len=10, lr=0.3, temp=80, temp_max=1000, debug=False, pretrain=False):
+    def __init__(self, his_len=10, epoch_len=10, lr=0.1, temp_fc=0.5, temp_max_fc=2, debug=False, pretrain=False):
         self.first = {}
         # TODO: add RNN to handle history if possible
         self.his_len = his_len  # length of history to look at(also the length of )
@@ -27,7 +27,7 @@ class Agent:
         # self.confidence = np.zeros((1))  # confidence defined as weighted sum of
         # winning rate(0.7) and not-losing rate(0.3)
         self.threshold_low = 0.33
-        self.threshold_high = 0.7
+        self.threshold_high = 0.46
         # self.val_map = {"r": 0, "p": 1, "s": 2, "l": 0, "t": 1, "w": 2, "-": 0, "o": 1, "+": 2}
         # self.action_map = ['r', 'p', 's']
         # self.opponent_friendliness = np.zeros((1))
@@ -39,9 +39,9 @@ class Agent:
         self.trainer = gluon.Trainer(self.net.collect_params(),
                                      'sgd', {'learning_rate': self.lr})
         self.debug = debug
-        self.temp = temp
-        self.temp_max = temp_max
-        self.default_temp = temp
+        self.temp_fc = temp_fc
+        self.temp_max_fc = temp_max_fc
+        self.default_temp_fc = temp_fc
 
 
     # return a action given current information
@@ -63,23 +63,27 @@ class Agent:
             # by (changing lr in gradient descent) or smaller epoch size?
             confidence = self.get_confidence()
             if confidence < self.threshold_low:
-                # self.lr = 3 * self.default_lr
-                # self.trainer.set_learning_rate(self.lr)
+                self.lr = self.default_lr
+                self.trainer.set_learning_rate(self.lr)
                 #self.epoch_len = max(round(self.default_epoch_len / 3), 1)
-                self.temp = min(self.temp * 4, self.temp_max)
+                self.temp_fc = min(self.temp_fc * 2, self.temp_max_fc)
             elif confidence > self.threshold_high:
                 # self.lr = 1 / 3 * self.default_lr
-                # self.trainer.set_learning_rate(self.lr)
+                self.lr /= 8
+                self.trainer.set_learning_rate(self.lr)
                 # self.epoch_len = round(self.default_epoch_len * 1.5)
-                self.temp = max(self.temp / 2, 1)
+                self.temp_fc = self.temp_fc / 2
             else:
+                self.lr /= 2
+                self.trainer.set_learning_rate(self.lr)
                 # if self.lr != self.default_lr:
                 #     self.lr = self.default_lr
                 #     self.trainer.set_learning_rate(self.lr)
                 # if self.epoch_len != self.default_epoch_len:
                 #     self.epoch_len = self.default_epoch_len
                 #if self.temp != self.default_temp:
-                self.temp = self.default_temp
+                self.temp_fc = self.default_temp_fc
+
 
             # collect info for EPOCH_SIZE epochs and then change the policy
             info = nd.zeros((1, 2))
@@ -94,6 +98,7 @@ class Agent:
                 print('friendness ', info[0, 1])
                 print('pro ', pro)
                 print('rewards', rewards)
+                print('lr', self.lr)
 
         # append out_action to self.his[0]
         self.last_action = our_action
@@ -114,14 +119,15 @@ class Agent:
         #open(file_name, 'a')
         with autograd.record():
             policy = self.net(nd.concat(input_arr, info))
-            if np.any(1.0 - nd.softmax(policy).asnumpy() <= small):
-               out_policy = nd.softmax(policy / self.temp)
-            else:
-                out_policy = nd.softmax(policy)
+            # if np.any(1.0 - nd.softmax(policy).asnumpy() <= small):
+            #     out_policy = nd.softmax(policy / (self.temp_fc))
+            # else:
+            #     out_policy = nd.softmax(policy)
+            out_policy = nd.softmax(policy / (self.temp_fc * nd.abs(policy).max()))
         head_grad = net.policy_gradient(out_policy, rewards)
         if self.debug:
             print('policy', policy)
-            print('temp', self.temp)
+            print('temp', self.temp_fc)
             print('out policy', out_policy)
             print('head grad', head_grad)
             print('weight', [(i, j.list_data()) for i, j in self.net.collect_params().items()])

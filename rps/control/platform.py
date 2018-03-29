@@ -17,8 +17,8 @@ class Platform:
     in_robot = False  # 是否使用AI
 
     def __init__(self):
-        self.agent = agent.Agent(his_len=5, epoch_len=5
-                                 , debug=True, lr=0.6)
+        self.agent = agent.Agent(his_len=6, epoch_len=6
+                                 , debug=True, lr=10)
 
     '''
     输入实验者当前轮的决策
