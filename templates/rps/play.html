@@ -42,6 +42,9 @@
 	<p>
         您正在进行第 <b id="counter">1</b> 轮博弈
     </p>
+    <p>
+        您现在总收益为 <b id="reward">0</b>
+    </p>
 
     <h3>
 	最近10轮的对战记录
@@ -132,8 +135,8 @@
                     });
                     $('#submit_button').show();
                     $('#waiting').text("");
-                    $('#counter').text(json['counter'])
-
+                    $('#counter').text(json['counter']);
+                    $('#reward').text(json['reward']);
                 }
             });
         }

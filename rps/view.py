@@ -9,6 +9,7 @@ import time
 from .util import util
 from .control.platform import Platform
 from .control.history import History
+from django.db.models import Q
 
 # game_manager = GameManager()
 platform = Platform()
@@ -97,10 +98,25 @@ def handon(request, debug=False):
             if debug:
                 print(json.dumps(data))
 
+            # reward
+            records = Record.objects \
+                .filter(Q(id1=id) | Q(id2=id))
+            rew = 0
+            for r in records:
+                rew += reward(r, id)
+
             ret = {
                 'records': json.dumps(data),
-                'counter': platform.counter + 1    # 轮数
+                'counter': platform.counter + 1,  # 轮数
+                'reward': rew
             }
 
             # In order to allow non-dict objects to be serialized set the safe parameter to False.
             return JsonResponse(ret)
+
+
+def reward(record, id):
+    if (record.id1 == id):
+        return util.earn(record.action1, record.action2)
+    else:
+        return util.earn(record.action2, record.action1)
